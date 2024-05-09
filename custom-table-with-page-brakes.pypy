@@ -1,16 +1,10 @@
 
-import os
-from fpdf import FPDF
-from fpdf.fonts import CORE_FONTS
-from pathlib import Path
-from fpdf.fonts import FontFace
-from fpdf.enums import TableCellFillMode, TableSpan
-
-
-from collections import deque
-
-class PDF(FPDF):  # stopka z numerem strony, TableSpan
+class PDF(FPDF):
+    """
+        This class inherits from FPDF and adds custom functionalities for creating reports in PDF format.
+    """
     def footer(self):
+
         self.set_y(-15)
         self.cell(0, 20, f'Strona {self.page_no()}', 0, 0, 'C')
 
@@ -47,16 +41,14 @@ def create_pdf(filename):
     pdf.add_page()
 
     #generuj tabele co ma 4 kolumny i 50 wierszy
-    TABLE_DATA =  [[str(i * 4 + col + 1) for col in range(4)] for i in range(50)]
+    table_data =  [[str(i * 4 + col + 1) for col in range(4)] for i in range(50)]
 
-
-    #pdf.before_page_break()
     line_height = pdf.font_size * 2
     col_width = pdf.epw / 4
 
-    #custom table
     pdf.table_header(line_height)
-    for row in TABLE_DATA:
+    #pierwsza strona tabeli
+    for row in table_data:
         if pdf.will_page_break(line_height):
             # kontynacja tabeli na nastepny stronie
             pdf.table_header(line_height)
@@ -66,9 +58,9 @@ def create_pdf(filename):
 
     pdf.add_page()
 
+    # dla porównania inne roziwazanie
     headings_style = FontFace(emphasis="BOLD", color=255, fill_color=(255, 100, 0))  # i tak nagłowek stylujemy
-    override_style = FontFace(emphasis="BOLD", color=56)
-    with pdf.table(TABLE_DATA,
+    with pdf.table(table_data,
                    num_heading_rows=2,
                    borders_layout="NO_HORIZONTAL_LINES",
                    cell_fill_color=(54, 54, 124),  # stylowanie pozostałych komórek
@@ -82,10 +74,11 @@ def create_pdf(filename):
                    ) as table1:
         pass
 
-
     pdf.output(filename)
     os.startfile(filename)  # otworz plik
 
 
 create_pdf("d:\core_fonts.pdf")
 print("koniec")
+
+
