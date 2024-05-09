@@ -1,0 +1,91 @@
+
+import os
+from fpdf import FPDF
+from fpdf.fonts import CORE_FONTS
+from pathlib import Path
+from fpdf.fonts import FontFace
+from fpdf.enums import TableCellFillMode, TableSpan
+
+
+from collections import deque
+
+class PDF(FPDF):  # stopka z numerem strony, TableSpan
+    def footer(self):
+        self.set_y(-15)
+        self.cell(0, 20, f'Strona {self.page_no()}', 0, 0, 'C')
+
+    def table_header(self, line_height):
+        """
+           This function creates the table header section of a report.
+
+           Args:
+               line_height (int): The line height used for spacing in the report.
+
+           Returns:
+               None
+        """
+        # Define table headers and styling
+        headers = ["Nak", "Bcos", "Cos1", "Bos"]
+
+        self.cell(0, line_height, "This text appears before each potential table page break.", align="C")
+        self.ln(line_height)
+        self.image("d:\img.png", h=self.eph / 2, w=self.epw, )
+        self.ln(line_height)
+        self.set_font(family="helvetica", size=14)
+        self.set_text_color(0)
+        for col_name in headers:
+            self.cell(w=40, txt=col_name, align='C', border=1,)  # Set header style
+        self.ln()
+
+def create_pdf(filename):
+
+    pdf = PDF(orientation='P', unit='mm', format='A4')
+    pdf.set_font("helvetica", size=14)
+    pdf.set_margins(left=25, top=20, right=25)
+    pdf.set_auto_page_break(True, margin=10)
+    # supported starting only with version 2.5.7
+    pdf.add_page()
+
+    #generuj tabele co ma 4 kolumny i 50 wierszy
+    TABLE_DATA =  [[str(i * 4 + col + 1) for col in range(4)] for i in range(50)]
+
+
+    #pdf.before_page_break()
+    line_height = pdf.font_size * 2
+    col_width = pdf.epw / 4
+
+    #custom table
+    pdf.table_header(line_height)
+    for row in TABLE_DATA:
+        if pdf.will_page_break(line_height):
+            # kontynacja tabeli na nastepny stronie
+            pdf.table_header(line_height)
+        for datum in row:
+            pdf.cell(col_width, line_height, datum, border=1)
+        pdf.ln(line_height)
+
+    pdf.add_page()
+
+    headings_style = FontFace(emphasis="BOLD", color=255, fill_color=(255, 100, 0))  # i tak nagłowek stylujemy
+    override_style = FontFace(emphasis="BOLD", color=56)
+    with pdf.table(TABLE_DATA,
+                   num_heading_rows=2,
+                   borders_layout="NO_HORIZONTAL_LINES",
+                   cell_fill_color=(54, 54, 124),  # stylowanie pozostałych komórek
+                   cell_fill_mode=TableCellFillMode.ROWS,
+                   # to koloruje nieparzyste komorki lub  TableCellFillMode.ALL jesli wszystkie komorki maja byc kolorowe
+                   headings_style=headings_style,  # stylowanie nagłowka
+                   line_height=6,
+                   col_widths=(40, 20, 50, 70),
+                   text_align="CENTER",
+                   padding=(1)
+                   ) as table1:
+        pass
+
+
+    pdf.output(filename)
+    os.startfile(filename)  # otworz plik
+
+
+create_pdf("d:\core_fonts.pdf")
+print("koniec")
